@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Explorer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        .container {
+            padding: 2rem;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: calc(100% - 1rem);
+            margin-bottom: 0.5rem;
+        }
+        textarea {
+            width: calc(100% - 1rem);
+            height: 150px;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: none;
+        }
+        .transactions {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .transaction {
+            background: #f9f9f9;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .error {
+            color: red;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Blockchain Explorer</h1>
+    </header>
+    <div class="container">
+        <!-- Create Wallet -->
+        <div class="card">
+            <h2>Create Wallet</h2>
+            <button id="create-wallet">Create Wallet</button>
+            <pre id="wallet-details"></pre>
+        </div>
+
+        <!-- Add Transaction -->
+        <div class="card">
+            <h2>Add a Transaction</h2>
+            <input type="text" id="sender" placeholder="Sender Address" />
+            <input type="text" id="recipient" placeholder="Recipient Address" />
+            <input type="number" id="amount" placeholder="Amount (positive number)" />
+            <input type="text" id="signature" placeholder="Signature" />
+            <input type="text" id="public-key" placeholder="Public Key" />
+            <button id="add-transaction">Add Transaction</button>
+            <p id="transaction-status" class="error"></p>
+        </div>
+
+        <!-- Check Wallet Balance -->
+        <div class="card">
+            <h2>Check Wallet Balance</h2>
+            <input type="text" id="wallet-address" placeholder="Wallet Address" />
+            <button id="check-balance">Check Balance</button>
+            <p id="balance-status"></p>
+        </div>
+
+        <!-- Blockchain Data -->
+        <div class="card">
+            <h2>Blockchain Data</h2>
+            <button id="view-chain">View Chain</button>
+            <textarea id="chain" readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = "http://127.0.0.1:5000";
+
+        // Create Wallet
+        document.getElementById("create-wallet").addEventListener("click", async () => {
+            try {
+                const response = await fetch(`${apiUrl}/wallet/new`);
+                if (!response.ok) {
+                    throw new Error(`Error creating wallet: ${response.statusText}`);
+                }
+                const data = await response.json();
+                document.getElementById("wallet-details").innerText = `
+                    Address: ${data.address}
+                    Public Key: ${data.public_key}
+                    Private Key: ${data.private_key}
+                `;
+            } catch (error) {
+                document.getElementById("wallet-details").innerText = `Error: ${error.message}`;
+            }
+        });
+
+        // Add Transaction
+        document.getElementById("add-transaction").addEventListener("click", async () => {
+            const sender = document.getElementById("sender").value.trim();
+            const recipient = document.getElementById("recipient").value.trim();
+            const amount = parseFloat(document.getElementById("amount").value.trim());
+            const signature = document.getElementById("signature").value.trim();
+            const publicKey = document.getElementById("public-key").value.trim();
+
+            if (!sender || !recipient || isNaN(amount) || amount <= 0 || !signature || !publicKey) {
+                document.getElementById("transaction-status").innerText = "All fields are required, and amount must be positive!";
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiUrl}/transactions/new`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sender, recipient, amount, signature, public_key: publicKey })
+                });
+                const data = await response.json();
+                document.getElementById("transaction-status").innerText = response.ok ?
+                    "Transaction added successfully!" : data.error || "Failed to add transaction.";
+            } catch (error) {
+                document.getElementById("transaction-status").innerText = "Error: " + error.message;
+            }
+        });
+
+        // Check Wallet Balance
+        document.getElementById("check-balance").addEventListener("click", async () => {
+            const address = document.getElementById("wallet-address").value.trim();
+
+            if (!address) {
+                document.getElementById("balance-status").innerText = "Address is required!";
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiUrl}/wallet/balance?address=${address}`);
+                if (!response.ok) {
+                    throw new Error("Failed to fetch balance.");
+                }
+                const data = await response.json();
+                document.getElementById("balance-status").innerText = `Balance: ${data.balance}`;
+            } catch (error) {
+                document.getElementById("balance-status").innerText = "Error: " + error.message;
+            }
+        });
+
+        // View Blockchain
+        document.getElementById("view-chain").addEventListener("click", async () => {
+            try {
+                const response = await fetch(`${apiUrl}/chain`);
+                if (!response.ok) {
+                    throw new Error("Failed to fetch blockchain data.");
+                }
+                const data = await response.json();
+                document.getElementById("chain").value = JSON.stringify(data.chain, null, 2);
+            } catch (error) {
+                document.getElementById("chain").value = "Error: " + error.message;
+            }
+        });
+    </script>
+</body>
+</html>

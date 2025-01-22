@@ -1,0 +1,41 @@
+{
+    "chain": [
+        {
+            "index": 1,
+            "timestamp": 1737501196.1370661,
+            "transactions": [],
+            "proof": 1,
+            "previous_hash": "0"
+        },
+        {
+            "index": 2,
+            "timestamp": 1737501890.7449105,
+            "transactions": [
+                {
+                    "sender": "0",
+                    "recipient": "miner_address",
+                    "amount": 1
+                }
+            ],
+            "proof": 72608,
+            "previous_hash": "84308872cc222fc23f7e9e5f26da98c30480457270374f505773273d36c21fcb"
+        },
+        {
+            "index": 3,
+            "timestamp": 1737502223.4740698,
+            "transactions": [
+                {
+                    "sender": "0",
+                    "recipient": "miner_address",
+                    "amount": 1
+                }
+            ],
+            "proof": 24348,
+            "previous_hash": "9f1e6ca3c1bebac58f03947dd8925e32bb454a8413121cf2d1942be36157a990"
+        }
+    ],
+    "current_transactions": [],
+    "wallets": {
+        "4d343beda3c54f14967e9c1ed7c43edc": 0
+    }
+}
